@@ -110,11 +110,7 @@ return {
         require("mini.surround").setup()
     end },
 
-    { "rust-lang/rust.vim", init = function()
-        vim.g.rustfmt_autosave = 1
-    end },
     { "slint-ui/vim-slint" },
-    { "dart-lang/dart-vim-plugin" },
     -- Treesitter
     {
         "nvim-treesitter/nvim-treesitter",

@@ -98,8 +98,6 @@ opt.signcolumn = "yes"         -- Columna de signos siempre visible
 opt.termguicolors = true       -- True color
 opt.cursorline = true          -- Resaltar línea del cursor
 
-vim.g.rustfmt_autosave = 1     -- Formateo automático con rustfmt
-
 -- Reconocer archivos *.blade.php como tipo 'blade'
 vim.filetype.add({
   pattern = { ['.*%.blade%.php'] = 'blade' },
@@ -253,9 +251,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **vim-easy-align** | Alinear código verticalmente | Atajo `ga` en normal y visual |
 | **vim-be-good** | Minijuegos para practicar Vim | — |
 | **mini.surround** | Añadir, borrar, cambiar rodeadores (`'`, `"`, `(`, `[`, `{`) | Carga inmediata |
-| **rust.vim** | Soporte para Rust | Complementa rust_analyzer |
 | **vim-slint** | Soporte para Slint UI | — |
-| **dart-vim-plugin** | Soporte para Dart | — |
 | **nvim-treesitter** | Parsers sintácticos + highlight + indent | 13 parsers: php, html, css, js, ts, rust, python, astro, lua, vim, etc. |
 | **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
 | **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 8 servidores |
