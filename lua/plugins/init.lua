@@ -27,6 +27,7 @@ return {
     -- CODE FOLDING
     { "kevinhwang91/nvim-ufo", dependencies = "kevinhwang91/promise-async", event = "VeryLazy", config = function()
         require("ufo").setup({
+            close_fold_kinds = {},
             provider_selector = function(bufnr, filetype, buftype)
                 return {"treesitter", "indent"}
             end,
@@ -57,6 +58,15 @@ return {
                 return newVirtText
             end
         })
+        vim.api.nvim_create_autocmd({ "BufReadPost", "BufEnter", "FileType" }, {
+            pattern = "*",
+            callback = function()
+                vim.defer_fn(function()
+                    require("ufo").openAllFolds()
+                end, 100)
+            end,
+        })
+        vim.opt.foldlevel = 20
         vim.keymap.set("n", "zR", require("ufo").openAllFolds)
         vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
         vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
@@ -178,30 +188,21 @@ return {
         },
     },
 
-    -- Conform.nvim (formateo automático al guardar)
+    -- Conform.nvim (formateo, deshabilitado por rendimiento)
     {
         "stevearc/conform.nvim",
         event = { "BufWritePre" },
         cmd = { "ConformInfo" },
         opts = {
-            formatters = {
-                laravel_pint = {
-                    command = "pint",
-                    args = { "$FILENAME" },
-                },
-                php_cs_fixer = {
-                    command = "php-cs-fixer",
-                    args = { "fix", "$FILENAME" },
-                },
-            },
             formatters_by_ft = {
-                php = { "laravel_pint", "php_cs_fixer" },
                 blade = { "blade-formatter" },
             },
             format_on_save = {
                 timeout_ms = 3000,
                 lsp_fallback = true,
             },
+            notify_on_error = true,
         },
+        enabled = false,
     },
 }

@@ -37,15 +37,23 @@ keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Ir a implementación
 keymap.set("n", "gy", vim.lsp.buf.type_definition, { desc = "Ir a definición de tipo" })
 keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Mostrar documentación" })
 keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Renombrar símbolo" })
-
+keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, { desc = "Code action / Importar clase" })
 -- General
 keymap.set("n", "<leader>e", ":Lex 25<CR>")
 keymap.set("n", "<leader>nt", ":NvimTreeToggle<CR>", { desc = "Toggle explorer" })
 
+-- Navegación entre pestañas
+keymap.set("n", "<A-n>", ":tabnext<CR>", { desc = "Tab siguiente" })
+keymap.set("n", "<A-p>", ":tabprevious<CR>", { desc = "Tab anterior" })
+
 -- Navegación entre buffers
+keymap.set("n", "<C-n>", ":bnext<CR>", { desc = "Buffer siguiente" })
+keymap.set("n", "<C-p>", ":bprevious<CR>", { desc = "Buffer anterior" })
 keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Buffer siguiente" })
 keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Buffer anterior" })
-keymap.set("n", "<leader>bd", ":bdelete<CR>", { desc = "Cerrar buffer" })
+keymap.set("n", "<leader>wd", ":bdelete<CR>", { desc = "Cerrar buffer" })
+keymap.set("n", "<Leader><PageUp>", ":bprevious<CR>", { desc = "Buffer anterior" })
+keymap.set("n", "<Leader><PageDown>", ":bnext<CR>", { desc = "Buffer siguiente" })
 
 -- Todo Comments
 keymap.set("n", "<leader>tt", ":TodoTelescope<CR>", { desc = "Buscar todos" })
