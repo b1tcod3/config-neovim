@@ -1,9 +1,6 @@
 local opt = vim.opt
 
--- Configurar easymotion antes de que carguen los plugins
-vim.g.easymotion_leader_key = '<Leader>'
-
--- Tus ajustes de Vim adaptados
+-- Opciones de interfaz y comportamiento
 opt.number = true
 opt.relativenumber = true
 opt.encoding = "utf-8"
@@ -19,9 +16,6 @@ opt.clipboard = "unnamedplus"
 opt.signcolumn = "yes"
 opt.termguicolors = true
 opt.cursorline = true
-
--- Variable para Rust (equivalente a tu let g:rustfmt_autosave = 1)
-vim.g.rustfmt_autosave = 1
 
 -- Registrar el tipo de archivo blade
 vim.filetype.add({

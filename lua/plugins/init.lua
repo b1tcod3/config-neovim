@@ -101,7 +101,9 @@ return {
 
     -- TUS PLUGINS DE SIEMPRE
     { "github/copilot.vim" },
-    { "easymotion/vim-easymotion" },
+    { "easymotion/vim-easymotion", init = function()
+        vim.g.easymotion_leader_key = '<Leader>'
+    end },
     { "junegunn/vim-easy-align" },
     { "ThePrimeagen/vim-be-good" },
 
@@ -110,7 +112,9 @@ return {
         require("mini.surround").setup()
     end },
 
-    { "rust-lang/rust.vim" },
+    { "rust-lang/rust.vim", init = function()
+        vim.g.rustfmt_autosave = 1
+    end },
     { "slint-ui/vim-slint" },
     { "dart-lang/dart-vim-plugin" },
     { "Vimjas/vim-python-pep8-indent" },
