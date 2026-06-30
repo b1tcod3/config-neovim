@@ -38,6 +38,6 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 -- Formateo vía LSP al guardar
 vim.api.nvim_create_autocmd("BufWritePre", {
     callback = function(args)
-        vim.lsp.buf.format({ bufnr = args.buf })
+        vim.lsp.buf.format({ bufnr = args.buf, async = false })
     end,
 })
