@@ -1,7 +1,5 @@
 local opt = vim.opt
 
-vim.g.mapleader = " "
-
 -- Configurar easymotion antes de que carguen los plugins
 vim.g.easymotion_leader_key = '<Leader>'
 
