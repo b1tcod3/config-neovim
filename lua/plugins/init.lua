@@ -204,22 +204,4 @@ return {
             },
         },
     },
-
-    -- Conform.nvim (formateo, deshabilitado por rendimiento)
-    {
-        "stevearc/conform.nvim",
-        event = { "BufWritePre" },
-        cmd = { "ConformInfo" },
-        opts = {
-            formatters_by_ft = {
-                blade = { "blade-formatter" },
-            },
-            format_on_save = {
-                timeout_ms = 3000,
-                lsp_fallback = true,
-            },
-            notify_on_error = true,
-        },
-        enabled = false,
-    },
 }

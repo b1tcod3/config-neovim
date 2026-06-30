@@ -34,3 +34,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
         vim.cmd("normal! zM")
     end,
 })
+
+-- Formateo vía LSP al guardar
+vim.api.nvim_create_autocmd("BufWritePre", {
+    callback = function(args)
+        vim.lsp.buf.format({ bufnr = args.buf })
+    end,
+})

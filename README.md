@@ -256,7 +256,6 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
 | **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 8 servidores |
 | **blink.cmp** | Autocompletado | Menú con Tab/Shift-Tab, fuentes: LSP + snippets + buffer |
-| **conform.nvim** | Formateo al guardar | **Deshabilitado** (`enabled = false`); solo configurado para Blade |
 
 ### Servidores LSP instalados (via Mason)
 
@@ -277,13 +276,13 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 - **Tab/Shift-Tab**: navegar entre opciones
 - **Fuentes**: `lsp` (servidores), `snippets` (LuaSnip), `buffer` (contenido del archivo)
 
-### Conform.nvim — Formateo
+### Formateo
 
-Actualmente **deshabilitado** por razones de rendimiento. Si se activa:
-
-- **Blade**: usa `blade-formatter` al guardar
-- **Fallback LSP**: si no hay formateador específico, usa el LSP
-- Timeout: 3s, notifica errores
+El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `BufWritePre`). Cada servidor LSP maneja su propio formateo:
+- **intelephense** → PHP/Blade
+- **rust_analyzer** → Rust
+- **lua_ls** → Lua
+- **pyright** → Python
 
 ---
 
