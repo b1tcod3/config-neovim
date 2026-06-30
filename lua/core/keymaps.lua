@@ -71,6 +71,10 @@ keymap.set("n", "zj", function() require("ufo").goNextClosedFold() end, { desc =
 -- Aerial (navegador de símbolos)
 keymap.set("n", "<leader>ao", ":AerialToggle! right<CR>", { desc = "Toggle Aerial" })
 
+-- Leap (navegación rápida)
+keymap.set({ "n", "x", "o" }, "<Leader>s", "<Plug>(leap-forward)", { desc = "Leap forward" })
+keymap.set({ "n", "x", "o" }, "<Leader>S", "<Plug>(leap-backward)", { desc = "Leap backward" })
+
 -- EasyAlign (alinear código)
 keymap.set("n", "ga", "<Plug>(EasyAlign)")
 keymap.set("x", "ga", "<Plug>(EasyAlign)")

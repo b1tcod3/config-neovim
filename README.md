@@ -82,9 +82,6 @@ require("lazy").setup("plugins")
 ```lua
 local opt = vim.opt
 
-vim.g.mapleader = " "
-vim.g.easymotion_leader_key = '<Leader>'
-
 opt.number = true              -- Números de línea
 opt.relativenumber = true      -- Números relativos
 opt.encoding = "utf-8"         -- Codificación UTF-8
@@ -252,7 +249,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **aerial.nvim** | Navegador de símbolos | Backends: treesitter + LSP, ancho mínimo 40 |
 | **Comment.nvim** | Comentar/descomentar líneas y bloques | Atajos `gc` (visual), `<Leader>cc` (línea), `<Leader>cb` (bloque) |
 | **copilot.vim** | GitHub Copilot | Sin configuración extra |
-| **vim-easymotion** | Navegación rápida tipo "jump anywhere" | Líder configurado como `<Leader>` |
+| **leap.nvim** | Navegación rápida tipo "jump anywhere" | Atajos `<Leader>s` / `<Leader>S` |
 | **vim-easy-align** | Alinear código verticalmente | Atajo `ga` en normal y visual |
 | **vim-be-good** | Minijuegos para practicar Vim | — |
 | **mini.surround** | Añadir, borrar, cambiar rodeadores (`'`, `"`, `(`, `[`, `{`) | Carga inmediata |

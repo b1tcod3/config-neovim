@@ -101,10 +101,8 @@ return {
 
     -- TUS PLUGINS DE SIEMPRE
     { "github/copilot.vim" },
-    { "easymotion/vim-easymotion", init = function()
-        vim.g.easymotion_leader_key = '<Leader>'
-    end },
     { "junegunn/vim-easy-align" },
+    { "ggandor/leap.nvim" },
     { "ThePrimeagen/vim-be-good" },
 
     -- SURROUND (pares, comillas, etc.)
