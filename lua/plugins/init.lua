@@ -151,7 +151,7 @@ return {
         config = function()
             require("mason").setup()
             require("mason-lspconfig").setup({
-                ensure_installed = { "rust_analyzer", "intelephense", "pyright", "lua_ls" }
+                ensure_installed = { "rust_analyzer", "intelephense", "pyright", "lua_ls", "tailwindcss", "astro", "emmet_ls", "html" }
             })
 
             local capabilities = require("blink.cmp").get_lsp_capabilities()
@@ -168,11 +168,27 @@ return {
             vim.lsp.config("lua_ls", {
                 capabilities = capabilities,
             })
+            vim.lsp.config("tailwindcss", {
+                capabilities = capabilities,
+            })
+            vim.lsp.config("astro", {
+                capabilities = capabilities,
+            })
+            vim.lsp.config("emmet_ls", {
+                capabilities = capabilities,
+            })
+            vim.lsp.config("html", {
+                capabilities = capabilities,
+            })
 
             vim.lsp.enable("intelephense")
             vim.lsp.enable("pyright")
             vim.lsp.enable("rust_analyzer")
             vim.lsp.enable("lua_ls")
+            vim.lsp.enable("tailwindcss")
+            vim.lsp.enable("astro")
+            vim.lsp.enable("emmet_ls")
+            vim.lsp.enable("html")
         end
     },
 

@@ -258,7 +258,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **dart-vim-plugin** | Soporte para Dart | — |
 | **nvim-treesitter** | Parsers sintácticos + highlight + indent | 13 parsers: php, html, css, js, ts, rust, python, astro, lua, vim, etc. |
 | **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
-| **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 4 servidores |
+| **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 8 servidores |
 | **blink.cmp** | Autocompletado | Menú con Tab/Shift-Tab, fuentes: LSP + snippets + buffer |
 | **conform.nvim** | Formateo al guardar | **Deshabilitado** (`enabled = false`); solo configurado para Blade |
 
@@ -270,6 +270,10 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | `pyright` | Python | Usa `blink.cmp` para autocompletado |
 | `rust_analyzer` | Rust | Usa `blink.cmp` para autocompletado |
 | `lua_ls` | Lua | Usa `blink.cmp` para autocompletado |
+| `tailwindcss` | CSS/Tailwind | Autocompletado de clases, colores inline, linting |
+| `astro` | Astro | Soporte nativo para componentes `.astro` |
+| `emmet_ls` | HTML/Blade | Expansión de abreviaturas Emmet |
+| `html` | HTML | Validación, hover, autocompletado de etiquetas |
 
 ### Blink.cmp — Autocompletado
 
