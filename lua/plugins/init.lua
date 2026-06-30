@@ -115,17 +115,20 @@ return {
     end },
     { "slint-ui/vim-slint" },
     { "dart-lang/dart-vim-plugin" },
-    { "Vimjas/vim-python-pep8-indent" },
-
-    -- Treesitter para PHP, Blade, HTML, CSS, JS
-    { "nvim-treesitter/nvim-treesitter", lazy = false, build = ":TSUpdate", config = function()
-        vim.api.nvim_create_autocmd("FileType", {
-            pattern = { "blade", "php", "html", "css", "javascript", "typescript" },
-            callback = function()
-                vim.treesitter.start()
-            end,
-        })
-    end },
+    -- Treesitter
+    {
+        "nvim-treesitter/nvim-treesitter",
+        lazy = false,
+        build = ":TSUpdate",
+        config = function()
+            require("nvim-treesitter.configs").setup({
+                ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "php", "html", "css", "javascript", "typescript", "rust", "python", "astro" },
+                sync_install = false,
+                highlight = { enable = true },
+                indent = { enable = true },
+            })
+        end
+    },
 
     -- BUSCADOR (Telescope)
     { "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" }, config = function()

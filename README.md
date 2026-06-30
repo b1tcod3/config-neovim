@@ -256,8 +256,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **rust.vim** | Soporte para Rust | Complementa rust_analyzer |
 | **vim-slint** | Soporte para Slint UI | — |
 | **dart-vim-plugin** | Soporte para Dart | — |
-| **vim-python-pep8-indent** | Indentado Python PEP8 | — |
-| **nvim-treesitter** | Parsers sintácticos | Activo para blade, php, html, css, javascript, typescript |
+| **nvim-treesitter** | Parsers sintácticos + highlight + indent | 13 parsers: php, html, css, js, ts, rust, python, astro, lua, vim, etc. |
 | **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
 | **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 4 servidores |
 | **blink.cmp** | Autocompletado | Menú con Tab/Shift-Tab, fuentes: LSP + snippets + buffer |
