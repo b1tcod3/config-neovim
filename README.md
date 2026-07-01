@@ -336,6 +336,10 @@ El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `B
 | `K` | Mostrar documentación (hover) |
 | `<Leader>rn` | Renombrar símbolo |
 | `<Leader>ca` | Code action / Importar clase |
+| `[d` | Error diagnóstico anterior |
+| `]d` | Error diagnóstico siguiente |
+| `<Leader>d` | Ver detalle del error (float) |
+| `<Leader>dl` | Lista de todos los errores |
 
 ### Folding (Ufo)
 

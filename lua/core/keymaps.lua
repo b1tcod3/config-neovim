@@ -38,6 +38,13 @@ keymap.set("n", "gy", vim.lsp.buf.type_definition, { desc = "Ir a definición de
 keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Mostrar documentación" })
 keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Renombrar símbolo" })
 keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, { desc = "Code action / Importar clase" })
+
+-- Diagnósticos
+keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Error anterior" })
+keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Error siguiente" })
+keymap.set("n", "<leader>d", vim.diagnostic.open_float, { desc = "Ver detalle del error" })
+keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { desc = "Lista de todos los errores" })
+
 -- General
 keymap.set("n", "<leader>e", ":Lex 25<CR>")
 keymap.set("n", "<leader>nt", ":NvimTreeToggle<CR>", { desc = "Toggle explorer" })
