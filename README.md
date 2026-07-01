@@ -18,6 +18,16 @@ nvim --headless "+Lazy! sync" +qa
 
 Al abrir Neovim, lazy.nvim descarga todos los plugins automáticamente. Mason instala los LSP servers en segundo plano.
 
+### Post-instalación
+
+Ejecuta estos comandos dentro de Neovim para completar la configuración:
+
+```vim
+:TSUpdate        " Descarga los parsers de Treesitter
+:Mason           " Verifica que los LSP servers estén instalados
+:checkhealth     " Diagnóstico completo del sistema
+```
+
 ---
 
 ## Estructura del proyecto

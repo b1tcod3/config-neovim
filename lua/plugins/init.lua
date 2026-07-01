@@ -98,7 +98,9 @@ return {
     -- TUS PLUGINS DE SIEMPRE
     { "github/copilot.vim" },
     { "junegunn/vim-easy-align" },
-    { "ggandor/leap.nvim" },
+    {
+      url = "https://codeberg.org/andyg/leap.nvim",
+    },
     { "ThePrimeagen/vim-be-good" },
 
     -- SURROUND (pares, comillas, etc.)
