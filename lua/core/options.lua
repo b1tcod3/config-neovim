@@ -16,6 +16,7 @@ opt.clipboard = "unnamedplus"
 opt.signcolumn = "yes"
 opt.termguicolors = true
 opt.cursorline = true
+opt.undofile = true
 
 -- Registrar el tipo de archivo blade
 vim.filetype.add({
