@@ -82,4 +82,4 @@ keymap.set("x", "ga", "<Plug>(EasyAlign)")
 -- Comentarios
 keymap.set("n", "<leader>cc", function() require("Comment.api").toggle.linewise.current() end, { desc = "Comentar línea" })
 keymap.set("n", "<leader>cb", function() require("Comment.api").toggle.blockwise.current() end, { desc = "Comentar bloque" })
-keymap.set("v", "<leader>c", ":Commentary<CR>", { desc = "Comentar selección" })
+
