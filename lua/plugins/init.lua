@@ -115,7 +115,7 @@ return {
         lazy = false,
         build = ":TSUpdate",
         config = function()
-            require("nvim-treesitter.configs").setup({
+            require("nvim-treesitter.config").setup({
                 ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "php", "html", "css", "javascript", "typescript", "rust", "python", "astro" },
                 sync_install = false,
                 highlight = { enable = true },
