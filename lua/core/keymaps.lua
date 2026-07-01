@@ -46,8 +46,7 @@ keymap.set("n", "<leader>d", vim.diagnostic.open_float, { desc = "Ver detalle de
 keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { desc = "Lista de todos los errores" })
 
 -- General
-keymap.set("n", "<leader>e", ":Lex 25<CR>")
-keymap.set("n", "<leader>nt", ":NvimTreeToggle<CR>", { desc = "Toggle explorer" })
+keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { desc = "Toggle NvimTree" })
 
 -- Navegación entre pestañas
 keymap.set("n", "<A-n>", ":tabnext<CR>", { desc = "Tab siguiente" })

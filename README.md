@@ -123,7 +123,7 @@ vim.filetype.add({
 | n | `<Leader>q!` | `:q!` | Forzar salida |
 | n,i | `<C-s>` | `:w` | Guardar (modos normal e insert) |
 | **Explorador** | | | |
-| n | `<Leader>e` | `:Lex 25` | Netrw (explorador vertical) |
+| n | `<Leader>e` | `:NvimTreeToggle` | NvimTree (explorador de archivos) |
 | n | `<Leader>nt` | `:NvimTreeToggle` | Toggle NvimTree |
 | **Telescope** | | | |
 | n | `<Leader>ff` | `find_files()` | Buscar archivos |
@@ -298,7 +298,7 @@ El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `B
 | `<Leader>qq` | Salir |
 | `<Leader>q!` | Forzar salida |
 | `<C-s>` | Guardar (normal/insert) |
-| `<Leader>e` | Abrir Netrw |
+| `<Leader>e` | Abrir NvimTree |
 | `<Leader>nt` | Toggle NvimTree |
 | `<Leader>tp` | Toggle auto-pairs |
 
