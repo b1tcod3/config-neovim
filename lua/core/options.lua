@@ -20,6 +20,8 @@ opt.undofile = true
 opt.ignorecase = true
 opt.smartcase = true
 opt.scrolloff = 8
+opt.splitbelow = true
+opt.splitright = true
 
 -- Registrar el tipo de archivo blade
 vim.filetype.add({
