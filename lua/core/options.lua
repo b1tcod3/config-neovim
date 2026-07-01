@@ -19,6 +19,7 @@ opt.cursorline = true
 opt.undofile = true
 opt.ignorecase = true
 opt.smartcase = true
+opt.scrolloff = 8
 
 -- Registrar el tipo de archivo blade
 vim.filetype.add({
