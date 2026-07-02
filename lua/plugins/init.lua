@@ -116,7 +116,7 @@ return {
         build = ":TSUpdate",
         config = function()
             require("nvim-treesitter.config").setup({
-                ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "php", "html", "css", "javascript", "typescript", "rust", "python", "astro" },
+                ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "php", "html", "css", "javascript", "typescript", "rust", "python", "astro", "go" },
                 sync_install = false,
                 highlight = { enable = true },
                 indent = { enable = true },
@@ -145,7 +145,7 @@ return {
         config = function()
             require("mason").setup()
             require("mason-lspconfig").setup({
-                ensure_installed = { "rust_analyzer", "intelephense", "pyright", "lua_ls", "tailwindcss", "astro", "emmet_ls", "html" }
+                ensure_installed = { "rust_analyzer", "intelephense", "pyright", "lua_ls", "tailwindcss", "astro", "emmet_ls", "html", "gopls" }
             })
 
             local capabilities = require("blink.cmp").get_lsp_capabilities()
@@ -174,6 +174,9 @@ return {
             vim.lsp.config("html", {
                 capabilities = capabilities,
             })
+            vim.lsp.config("gopls", {
+                capabilities = capabilities,
+            })
 
             vim.lsp.enable("intelephense")
             vim.lsp.enable("pyright")
@@ -183,6 +186,7 @@ return {
             vim.lsp.enable("astro")
             vim.lsp.enable("emmet_ls")
             vim.lsp.enable("html")
+            vim.lsp.enable("gopls")
         end
     },
 
