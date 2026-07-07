@@ -103,11 +103,6 @@ return {
     },
     { "ThePrimeagen/vim-be-good" },
 
-    -- SURROUND (pares, comillas, etc.)
-    { "nvim-mini/mini.surround", lazy = false, config = function()
-        require("mini.surround").setup()
-    end },
-
     { "slint-ui/vim-slint" },
     -- Treesitter
     {
