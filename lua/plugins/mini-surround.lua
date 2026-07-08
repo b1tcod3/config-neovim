@@ -16,5 +16,6 @@ return {
                 ["w"] = { output = { left = "@env", right = " @endenv" } },
             },
         })
+        vim.keymap.set("x", "S", function() require("mini.surround").add("visual") end, { desc = "Add surround (visual)" })
     end,
 }
