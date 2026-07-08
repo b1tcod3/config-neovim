@@ -260,7 +260,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **leap.nvim** | Navegación rápida tipo "jump anywhere" | Atajos `<Leader>s` / `<Leader>S` |
 | **vim-easy-align** | Alinear código verticalmente | Atajo `ga` en normal y visual |
 | **vim-be-good** | Minijuegos para practicar Vim | — |
-| **mini.surround** | Añadir, borrar, cambiar rodeadores (`'`, `"`, `(`, `[`, `{`) | Carga inmediata |
+| **mini.surround** | Añadir, borrar, cambiar rodeadores (`'`, `"`, `(`, `[`, `{`) + surroundings custom Blade/Laravel | Carga inmediata |
 | **vim-slint** | Soporte para Slint UI | — |
 | **nvim-treesitter** | Parsers sintácticos + highlight + indent | 13 parsers: php, html, css, js, ts, rust, python, astro, lua, vim, etc. |
 | **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
@@ -377,6 +377,22 @@ El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `B
 | `<Leader>tt` | Buscar TODOs (Telescope) |
 | `]t` | TODO siguiente |
 | `[t` | TODO anterior |
+
+### Surround custom (Blade/Laravel)
+
+| Atajo | Acción |
+|-------|--------|
+| `saiw` | Envuelve palabra con `@island ... @endisland` |
+| `sapw` | Envuelve palabra con `@php ... @endphp` |
+| `safw` | Envuelve palabra con `@if ... @endif` |
+| `saew` | Envuelve palabra con `@foreach ... @endforeach` |
+| `sasw` | Envuelve palabra con `@section ... @endsection` |
+| `sahw` | Envuelve palabra con `@push ... @endpush` |
+| `sadw` | Envuelve palabra con `@error ... @enderror` |
+| `saaw` | Envuelve palabra con `@auth ... @endauth` |
+| `sagw` | Envuelve palabra con `@guest ... @endguest` |
+| `saww` | Envuelve palabra con `@env ... @endenv` |
+| `S{tecla}` (visual) | Envuelve selección con el surround correspondiente |
 
 ### Otros
 
