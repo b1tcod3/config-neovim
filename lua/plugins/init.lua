@@ -119,6 +119,18 @@ return {
         end
     },
 
+    { "nvim-treesitter/nvim-treesitter-textobjects", config = function()
+        require("nvim-treesitter.config").setup({
+            textobjects = {
+                move = {
+                    enable = true,
+                    goto_next_start = { ["]]"] = "@function.outer", ["]M"] = "@class.outer" },
+                    goto_previous_start = { ["[["] = "@function.outer", ["[M"] = "@class.outer" },
+                },
+            },
+        })
+    end },
+
     -- BUSCADOR (Telescope)
     { "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" }, config = function()
         require('telescope').setup({

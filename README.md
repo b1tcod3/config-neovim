@@ -263,6 +263,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **mini.surround** | Añadir, borrar, cambiar rodeadores (`'`, `"`, `(`, `[`, `{`) + surroundings custom Blade/Laravel | Carga inmediata |
 | **vim-slint** | Soporte para Slint UI | — |
 | **nvim-treesitter** | Parsers sintácticos + highlight + indent | 13 parsers: php, html, css, js, ts, rust, python, astro, lua, vim, etc. |
+| **nvim-treesitter-textobjects** | Navegación por funciones/clases vía `[[`, `]]`, `[M`, `]M` | — |
 | **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
 | **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 8 servidores |
 | **blink.cmp** | Autocompletado | Menú con Tab/Shift-Tab, fuentes: LSP + snippets + buffer |
@@ -350,6 +351,15 @@ El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `B
 | `]d` | Error diagnóstico siguiente |
 | `<Leader>d` | Ver detalle del error (float) |
 | `<Leader>dl` | Lista de todos los errores |
+
+### Navegación por funciones/clases (treesitter-textobjects)
+
+| Atajo | Acción |
+|-------|--------|
+| `[[` | Ir al inicio de la función anterior |
+| `]]` | Ir al inicio de la función siguiente |
+| `[M` | Ir al inicio de la clase anterior |
+| `]M` | Ir al inicio de la clase siguiente |
 
 ### Folding (Ufo)
 
