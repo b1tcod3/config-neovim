@@ -28,12 +28,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end,
 })
 
--- Fold inicial (todo cerrado) al abrir archivos
-vim.api.nvim_create_autocmd("BufReadPost", {
-    callback = function()
-        vim.cmd("normal! zM")
-    end,
-})
+
 
 -- Formateo vía LSP al guardar
 vim.api.nvim_create_autocmd("BufWritePre", {
