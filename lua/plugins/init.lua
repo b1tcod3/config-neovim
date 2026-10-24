@@ -96,7 +96,7 @@ return {
     { "numToStr/Comment.nvim", keys = {"gc", "gbc"}, config = function() require("Comment").setup() end },
 
     -- TUS PLUGINS DE SIEMPRE
-    { "github/copilot.vim" },
+    { "github/copilot.vim", init = function() vim.g.copilot_no_tab_map = true end },
     { "junegunn/vim-easy-align" },
     {
       url = "https://codeberg.org/andyg/leap.nvim",

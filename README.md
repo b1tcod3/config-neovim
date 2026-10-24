@@ -256,7 +256,7 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 | **nvim-tree.lua** | Explorador de archivos lateral | Muestra archivos ignorados por git (`git.ignore = false`) |
 | **aerial.nvim** | Navegador de símbolos | Backends: treesitter + LSP, ancho mínimo 40 |
 | **Comment.nvim** | Comentar/descomentar líneas y bloques | Atajos `gc` (visual), `<Leader>cc` (línea), `<Leader>cb` (bloque) |
-| **copilot.vim** | GitHub Copilot | Sin configuración extra |
+| **copilot.vim** | GitHub Copilot | `<Tab>` liberado (`copilot_no_tab_map`) para no chocar con blink.cmp; aceptar con `<C-j>` |
 | **leap.nvim** | Navegación rápida tipo "jump anywhere" | Atajos `<Leader>s` / `<Leader>S` |
 | **vim-easy-align** | Alinear código verticalmente | Atajo `ga` en normal y visual |
 | **vim-be-good** | Minijuegos para practicar Vim | — |
@@ -287,6 +287,15 @@ Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(.
 - **Tab/Shift-Tab**: navegar entre opciones
 - **Fuentes**: `lsp` (servidores), `snippets` (LuaSnip), `buffer` (contenido del archivo)
 
+### Copilot y Tab — por qué no chocan
+
+`copilot.vim` mapea `<Tab>` por defecto para aceptar sugerencias. Como `blink.cmp` también aplica su propio `<Tab>` (buffer-local) al entrar en insert mode, el mapeo de Copilot quedaba pisado. La solución aplicada:
+
+1. `vim.g.copilot_no_tab_map = true` en el `init` de `copilot.vim` → Copilot no toca `<Tab>`.
+2. `<C-j>` en insert mode acepta la sugerencia de Copilot (`copilot#Accept()`), con salto de línea como fallback si no hay sugerencia.
+
+Resultado: `<Tab>` navega el menú de blink, `<Enter>` acepta el completado y `<C-j>` acepta la sugerencia de Copilot. Sin mapeos condicionales ni "super-tab".
+
 ### Formateo
 
 El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `BufWritePre`). Cada servidor LSP maneja su propio formateo:
@@ -312,6 +321,16 @@ El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `B
 | `<Leader>e` | Abrir NvimTree |
 | `<Leader>nt` | Toggle NvimTree |
 | `<Leader>tp` | Toggle auto-pairs |
+| `<C-j>` (insert) | Aceptar sugerencia de Copilot (o salto de línea si no hay) |
+
+### Autocompletado (blink.cmp)
+
+| Atajo | Acción |
+|-------|--------|
+| `<Tab>` (insert) | Siguiente opción del menú |
+| `<S-Tab>` (insert) | Opción anterior del menú |
+| `<Enter>` (insert) | Aceptar opción seleccionada |
+| `<C-j>` (insert) | Aceptar sugerencia de Copilot |
 
 ### Navegación (Telescope)
 

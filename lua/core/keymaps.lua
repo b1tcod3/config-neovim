@@ -11,6 +11,14 @@ keymap.set("n", "<leader>q!", ":q!<CR>", { desc = "Forzar salida" })
 keymap.set("n", "<C-s>", ":w<CR>", { desc = "Guardar" })
 keymap.set("i", "<C-s>", "<Esc>:w<CR>a", { desc = "Guardar y permanecer en insert" })
 
+-- Aceptar sugerencia de Copilot (Tab queda libre para blink.cmp)
+keymap.set("i", "<C-j>", 'copilot#Accept("\\<CR>")', {
+    expr = true,
+    silent = true,
+    replace_keycodes = false,
+    desc = "Aceptar sugerencia Copilot",
+})
+
 -- Toggle mini.pairs (desactivar paréntesis automático)
 local pairs_enabled = true
 keymap.set("n", "<leader>tp", function()
