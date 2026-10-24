@@ -104,32 +104,6 @@ return {
     { "ThePrimeagen/vim-be-good" },
 
     { "slint-ui/vim-slint" },
-    -- Treesitter
-    {
-        "nvim-treesitter/nvim-treesitter",
-        lazy = false,
-        build = ":TSUpdate",
-        config = function()
-            require("nvim-treesitter.config").setup({
-                ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "php", "html", "css", "javascript", "typescript", "rust", "python", "astro", "go", "markdown", "markdown_inline" },
-                sync_install = false,
-                highlight = { enable = true },
-                indent = { enable = true },
-            })
-        end
-    },
-
-    { "nvim-treesitter/nvim-treesitter-textobjects", config = function()
-        require("nvim-treesitter.config").setup({
-            textobjects = {
-                move = {
-                    enable = true,
-                    goto_next_start = { ["]]"] = "@function.outer", ["]M"] = "@class.outer" },
-                    goto_previous_start = { ["[["] = "@function.outer", ["[M"] = "@class.outer" },
-                },
-            },
-        })
-    end },
 
     -- BUSCADOR (Telescope)
     { "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" }, config = function()
