@@ -41,6 +41,7 @@ return {
                     "rust_analyzer",
                     "intelephense",
                     "pyright",
+                    "ts_ls",
                     "lua_ls",
                     "tailwindcss",
                     "astro",
@@ -57,6 +58,7 @@ return {
             vim.lsp.enable({
                 "intelephense",
                 "pyright",
+                "ts_ls",
                 "rust_analyzer",
                 "lua_ls",
                 "tailwindcss",

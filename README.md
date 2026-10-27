@@ -283,6 +283,7 @@ Mason y LSP se cargan al abrir el primer archivo (`BufReadPre`/`BufNewFile`), no
 |---|---|
 | `intelephense` | PHP |
 | `pyright` | Python |
+| `ts_ls` | TypeScript / JavaScript |
 | `rust_analyzer` | Rust |
 | `lua_ls` | Lua |
 | `tailwindcss` | Tailwind CSS |
