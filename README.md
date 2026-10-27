@@ -1,13 +1,16 @@
 # Configuración Neovim
 
-Mi configuración personal de Neovim para desarrollo web (PHP/Laravel, Python, Rust, Lua) y programación general.
+Configuración personal de Neovim orientada a desarrollo web (PHP/Laravel, Python, Rust, Go, Lua y frontend) con LSP nativo, Treesitter, autocompletado y carga diferida de plugins.
 
 ## Requisitos
 
-- **Neovim 0.11+** — usa la API nativa de LSP (`vim.lsp.config`, `vim.lsp.enable`)
-- **Git** — para clonar el repositorio y que lazy.nvim instale plugins
-- **Nerd Font** — para los iconos en lualine, bufferline, nvim-tree, etc.
-- **Terminal con true color** — necesario para el theme Tokyo Night
+- **Neovim 0.12+** — se usa la API nativa `vim.lsp.config` / `vim.lsp.enable` y la rama `main` de `nvim-treesitter`. Probado con Neovim 0.13.0-dev.
+- **Git** — para clonar el repositorio y para que lazy.nvim instale plugins.
+- **tree-sitter-cli >= 0.26.1** y un compilador de C — necesarios para compilar los parsers de Treesitter.
+- **Nerd Font** — para los iconos de lualine, bufferline, nvim-tree, etc.
+- **Terminal con true color** — necesario para Tokyo Night.
+- **ripgrep** (`rg`) y opcionalmente **fd** — búsquedas de Telescope.
+- **Node.js** — recomendado para algunos servidores LSP instalados por Mason (intelephense, tailwindcss, emmet, etc.).
 
 ## Instalación
 
@@ -16,16 +19,19 @@ git clone https://github.com/b1tcod3/config-neovim.git ~/.config/nvim
 nvim --headless "+Lazy! sync" +qa
 ```
 
-Al abrir Neovim, lazy.nvim descarga todos los plugins automáticamente. Mason instala los LSP servers en segundo plano.
+Al abrir Neovim, lazy.nvim instala lo que falte. Los parsers de Treesitter que no estén instalados se descargan en segundo plano al arrancar; para forzarlo:
+
+```vim
+:TSInstall c rust python astro go
+:TSUpdate
+```
 
 ### Post-instalación
 
-Ejecuta estos comandos dentro de Neovim para completar la configuración:
-
 ```vim
-:TSUpdate        " Descarga los parsers de Treesitter
-:Mason           " Verifica que los LSP servers estén instalados
-:checkhealth     " Diagnóstico completo del sistema
+:Lazy          " Estado de los plugins
+:Mason         " Verificar/instalar servidores LSP
+:checkhealth   " Diagnóstico completo
 ```
 
 ---
@@ -34,423 +40,441 @@ Ejecuta estos comandos dentro de Neovim para completar la configuración:
 
 ```
 ~/.config/nvim/
-├── init.lua                  # Entry point
-├── lazy-lock.json            # Lock de versiones de plugins
-├── .gitignore                # Archivos ignorados por git
+├── init.lua                    # Entry point + configuración de lazy.nvim
+├── lazy-lock.json              # Lock de versiones de plugins
+├── .gitignore
 ├── lua/
 │   ├── core/
-│   │   ├── options.lua       # Opciones globales de Neovim
-│   │   ├── keymaps.lua       # Atajos de teclado
-│   │   ├── autocmds.lua      # Auto-comandos (eventos)
-│   │   └── php-namespace.lua # Inserción automática de namespace PHP
+│   │   ├── options.lua         # Opciones globales y filetype blade
+│   │   ├── keymaps.lua         # Atajos de teclado
+│   │   ├── autocmds.lua        # Guardado, cursor, yank, composer.json
+│   │   └── php-namespace.lua   # Inserción automática de namespace PSR-4
 │   └── plugins/
-│       └── init.lua          # Declaración y configuración de plugins
+│       ├── init.lua            # Índice de la división de plugins
+│       ├── ui.lua              # Tema, barras, explorador, símbolos
+│       ├── editor.lua          # Pares, autotag, folds, comentarios, Copilot, Telescope
+│       ├── lsp.lua             # Mason, nvim-lspconfig, blink.cmp
+│       ├── treesitter.lua      # Parsers, highlight, indent, textobjects
+│       ├── mini-surround.lua   # Surrounds custom de Blade/Laravel
+│       └── render-markdown.lua # Render de Markdown
 └── after/
-    ├── ftplugin/             # Configuración por tipo de archivo
-    └── plugin/               # Plugins post-carga
+    └── ftdetect/
+        └── blade.lua           # Reconoce *.blade.php como filetype blade
 ```
 
 ---
 
-## init.lua — Entry point
+## `init.lua` — Entry point
 
 ```lua
--- ~/.config/nvim/init.lua
-
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 require("core.options")
-require("core.keymaps")
-require("core.autocmds")
 
+-- Instala lazy.nvim si no existe y lo agrega al runtimepath
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({ "git", "clone", "--filter=blob:none",
     "https://github.com/folke/lazy.nvim.git",
     "--branch=stable", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup("plugins")
+require("lazy").setup("plugins", {
+  install = { missing = true, colorscheme = { "tokyonight" } },
+  checker = { enabled = false },
+  change_detection = { notify = false },
+  performance = {
+    cache = { enabled = true },
+    rtp = {
+      reset = true,
+      disabled_plugins = {
+        "gzip", "netrwPlugin", "tarPlugin",
+        "tohtml", "tutor", "zipPlugin",
+      },
+    },
+  },
+  ui = { border = "rounded" },
+})
+
+require("core.keymaps")
+require("core.autocmds")
 ```
 
-| Línea | Explicación |
-|-------|-------------|
-| `mapleader = " "` | Define `<Space>` como tecla líder |
-| `maplocalleader = " "` | `<Space>` también como líder local |
-| `require("core.*")` | Carga options, keymaps y autocmds |
-| `lazypath` | Ruta donde se instala lazy.nvim (~/.local/share/nvim/lazy/lazy.nvim) |
-| `vim.loop.fs_stat` | Verifica si lazy.nvim ya está instalado; si no, lo clona |
-| `vim.opt.rtp:prepend` | Agrega lazy.nvim al runtimepath antes de `setup()` |
-| `require("lazy").setup("plugins")` | Inicializa lazy.nvim con la configuración de `lua/plugins/init.lua` |
+| Elemento | Explicación |
+|---|---|
+| `mapleader = " "` | `<Space>` es la tecla líder. |
+| `core.options` | Opciones antes de cargar plugins. |
+| `vim.uv.fs_stat` | Comprueba si lazy.nvim está instalado (API moderna; `vim.loop` está deprecado). |
+| `performance.cache` | Caché de módulos Lua. |
+| `disabled_plugins` | Desactiva plugins de runtime que no se usan (netrw, gzip, tar, zip, tutor, tohtml). |
+| `checker = false` | Evita comprobaciones de actualización en segundo plano; usa `:Lazy check` cuando quieras. |
 
 ---
 
-## lua/core/options.lua — Opciones de Neovim
+## `lua/core/options.lua`
+
+| Opción | Valor |
+|---|---|
+| `number`, `relativenumber` | Números absolutos y relativos |
+| `cursorline` | Resalta la línea actual |
+| `signcolumn` | `yes:2` (ancho estable para diagnósticos) |
+| `termguicolors` | True color |
+| `tabstop`, `shiftwidth` | 4 |
+| `expandtab` | Tabs → espacios |
+| `backup`, `writebackup`, `swapfile` | Desactivados |
+| `undofile` | Undo persistente |
+| `clipboard` | `unnamedplus` |
+| `ignorecase` + `smartcase` | Búsqueda inteligente |
+| `scrolloff`, `sidescrolloff` | 8 |
+| `splitbelow`, `splitright`, `splitkeep` | Divisiones predecibles |
+| `foldenable`, `foldcolumn` | Folds activos, columna de 1 |
+| `foldlevel`, `foldlevelstart` | 99 (folds abiertos al abrir archivos) |
+| `confirm` | Confirmación al cerrar con cambios |
+| `breakindent` | Indentación visual en líneas largas |
+| `pumheight` | 12 |
+
+Los diagnósticos se configuran al cargar el LSP (`lua/plugins/lsp.lua`): texto virtual, signos, subrayado, `update_in_insert = false`, orden por severidad y ventana flotante redondeada.
+
+### Filetype Blade
+
+La detección está centralizada en `after/ftdetect/blade.lua`:
 
 ```lua
-local opt = vim.opt
-
-opt.number = true              -- Números de línea
-opt.relativenumber = true      -- Números relativos
-opt.encoding = "utf-8"         -- Codificación UTF-8
-opt.tabstop = 4                -- Un tab = 4 espacios
-opt.shiftwidth = 4             -- Indentación = 4 espacios
-opt.autoindent = true          -- Indentar automáticamente
-opt.expandtab = true           -- Tab → espacios
-opt.backup = false             -- Sin archivos .bak
-opt.writebackup = false
-opt.swapfile = false           -- Sin archivos .swp
-opt.updatetime = 300           -- Actualización cada 300ms (útil para diagnosticos LSP)
-opt.clipboard = "unnamedplus"  -- Copia al portapapeles del sistema
-opt.signcolumn = "yes"         -- Columna de signos siempre visible
-opt.termguicolors = true       -- True color
-opt.cursorline = true          -- Resaltar línea del cursor
-
--- Reconocer archivos *.blade.php como tipo 'blade'
 vim.filetype.add({
-  pattern = { ['.*%.blade%.php'] = 'blade' },
+  pattern = { [".*%.blade%.php"] = "blade" },
 })
 ```
 
-### Autocomandos en options.lua
-
-- **Restaurar cursor**: al abrir un archivo, posiciona el cursor donde estaba la última vez.
-- **Fold cerrado**: ejecuta `zM` al abrir archivos (todos los folds cerrados inicialmente).
-
 ---
 
-## lua/core/keymaps.lua — Atajos de teclado
+## `lua/core/autocmds.lua`
 
-| Modo | Atajo | Acción | Descripción |
-|------|-------|--------|-------------|
-| **Guardado** | | | |
-| n | `<Leader>w` | `:w` | Guardar archivo |
-| n | `<Leader>wa` | `:wa` | Guardar todos |
-| n | `<Leader>wq` | `:wq` | Guardar y salir |
-| n | `<Leader>qq` | `:q` | Salir |
-| n | `<Leader>q!` | `:q!` | Forzar salida |
-| n,i | `<C-s>` | `:w` | Guardar (modos normal e insert) |
-| **Explorador** | | | |
-| n | `<Leader>e` | `:NvimTreeToggle` | NvimTree (explorador de archivos) |
-| n | `<Leader>nt` | `:NvimTreeToggle` | Toggle NvimTree |
-| **Telescope** | | | |
-| n | `<Leader>ff` | `find_files()` | Buscar archivos |
-| n | `<Leader>fg` | `live_grep()` | Buscar contenido |
-| n | `<Leader>fb` | `buffers()` | Buscar buffers abiertos |
-| n | `<Leader>fh` | `help_tags()` | Buscar en ayuda |
-| **Navegación** | | | |
-| n | `<A-n>` | `:tabnext` | Pestaña siguiente |
-| n | `<A-p>` | `:tabprevious` | Pestaña anterior |
-| n | `<C-n>` | `:bnext` | Buffer siguiente |
-| n | `<C-p>` | `:bprevious` | Buffer anterior |
-| n | `<Leader>bn` | `:bnext` | Buffer siguiente |
-| n | `<Leader>bp` | `:bprevious` | Buffer anterior |
-| n | `<Leader>wd` | `:bdelete` | Cerrar buffer |
-| n | `<Leader><PageUp>` | `:bprevious` | Buffer anterior |
-| n | `<Leader><PageDown>` | `:bnext` | Buffer siguiente |
-| **LSP** | | | |
-| n | `gd` | `vim.lsp.buf.definition` | Ir a definición |
-| n | `gr` | `vim.lsp.buf.references` | Ver referencias |
-| n | `gi` | `vim.lsp.buf.implementation` | Ir a implementación |
-| n | `gy` | `vim.lsp.buf.type_definition` | Ir a definición de tipo |
-| n | `K` | `vim.lsp.buf.hover` | Mostrar documentación |
-| n | `<Leader>rn` | `vim.lsp.buf.rename` | Renombrar símbolo |
-| n,v | `<Leader>ca` | `vim.lsp.buf.code_action` | Code action / Importar clase |
-| **Folding (Ufo)** | | | |
-| n | `zR` | `ufo.openAllFolds()` | Abrir todos los folds |
-| n | `zM` | `ufo.closeAllFolds()` | Cerrar todos los folds |
-| n | `zr` | `ufo.openFoldsExceptKinds()` | Abrir excepto funciones |
-| n | `zm` | `ufo.closeFoldsWith()` | Cerrar folds |
-| n | `zj` | `ufo.goNextClosedFold()` | Fold siguiente |
-| n | `zk` | `ufo.goPreviousClosedFold()` | Fold anterior |
-| **Todo Comments** | | | |
-| n | `<Leader>tt` | `:TodoTelescope` | Buscar TODOs |
-| n | `]t` | `todo-comments next` | TODO siguiente |
-| n | `[t` | `todo-comments prev` | TODO anterior |
-| **Aerial** | | | |
-| n | `<Leader>ao` | `:AerialToggle! right` | Toggle navegador de símbolos |
-| **Comentarios** | | | |
-| n | `<Leader>cc` | `Comment toggle linewise` | Comentar línea |
-| n | `<Leader>cb` | `Comment toggle blockwise` | Comentar bloque |
-| v | `<Leader>c` | `:Commentary` | Comentar selección |
-| **EasyAlign** | | | |
-| n,x | `ga` | `<Plug>(EasyAlign)` | Alinear código |
-| **mini.pairs** | | | |
-| n | `<Leader>tp` | toggle function | Activar/desactivar pares automáticos |
+Todas las autocmds viven en el grupo `UserAutocmds`.
 
----
+| Evento | Acción |
+|---|---|
+| `BufWritePre` | Crea los directorios padres si no existen, inserta el namespace PHP y formatea con LSP. |
+| `BufReadPost` | Restaura la posición del cursor (solo buffers normales). |
+| `TextYankPost` | Resalta brevemente el texto copiado. |
+| `BufWritePost` (composer.json) | Invalida la caché de PSR-4. |
 
-## lua/core/autocmds.lua — Auto-comandos
+### Formateo al guardar
+
+Se ejecuta solo si:
+
+1. El buffer es normal (`buftype == ""`).
+2. No tiene `vim.b.disable_autoformat = true`.
+3. Hay al menos un cliente LSP que soporte `textDocument/formatting`.
 
 ```lua
-local php_ns = require("core.php-namespace")
+local clients = vim.lsp.get_clients({ bufnr = buf, method = "textDocument/formatting" })
+if #clients == 0 then return end
 
--- Al guardar archivos .php, inserta namespace si no existe
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*.php",
-  callback = function()
-    php_ns.auto_namespace()
-  end,
-})
-
--- Al guardar cualquier archivo, crea directorios padres si no existen
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*",
-  callback = function()
-    local dir = vim.fn.expand("%:p:h")
-    if dir ~= "" and vim.fn.isdirectory(dir) == 0 then
-      vim.fn.mkdir(dir, "p")
-    end
+vim.lsp.buf.format({
+  bufnr = buf,
+  async = false,
+  timeout_ms = 2000,
+  filter = function(client)
+    return client:supports_method("textDocument/formatting")
   end,
 })
 ```
 
-| Evento | Patrón | Acción |
-|--------|--------|--------|
-| `BufWritePre` | `*.php` | Inserta namespace PSR-4 automático (si no existe) |
-| `BufWritePre` | `*` | Crea directorios padres automáticamente |
+Para desactivarlo en un buffer concreto:
 
----
-
-## lua/core/php-namespace.lua — Namespace automático PHP
-
-Este módulo implementa la inserción automática de `namespace ...;` en archivos PHP según las reglas PSR-4 definidas en `composer.json`.
-
-### Flujo de `auto_namespace()`:
-
-```
-1. ¿Es archivo PHP?           → No → return
-2. ¿Ya tiene namespace?        → Sí → return (no duplicar)
-3. Buscar composer.json        → No → return
-4. Leer autoload.psr-4         → No → return
-5. Computar namespace          → No → return
-6. Insertar línea namespace
+```vim
+:lua vim.b.disable_autoformat = true
 ```
 
-### Función `compute_namespace(filepath, root, mappings)`
-
-Toma la ruta relativa del archivo respecto al proyecto, la compara con los prefijos PSR-4 y construye el namespace.
-
-**Ejemplo**: `app/Models/User.php` con `"App\\": "app/"` → `namespace App\Models;`
-
-### Función `insert_namespace(namespace)`
-
-Inserta la línea `namespace ...;` después de `<?php` (o después de `declare(...)` si existe), con una línea en blanco antes y después para formateo limpio.
+> Nota: `intelephense` (versión gratuita) no expone formateo, así que en PHP el guardado no se bloquea esperando un formateador que no existe.
 
 ---
 
-## lua/plugins/init.lua — Plugins
+## `lua/core/php-namespace.lua` — Namespace PSR-4 automático
 
-| Plugin | Propósito | Configuración destacada |
-|--------|-----------|------------------------|
-| **tokyonight.nvim** | Tema oscuro Tokyo Night | `lazy = false, priority = 1000` — se carga primero |
-| **noice.nvim** | UI moderna (cmdline, messages, notificaciones) | `bottom_search`, `command_palette`, mensajes de modo como notificación |
-| **todo-comments.nvim** | Resalta y navega TODO, FIXME, HACK, etc. | Integrado con Telescope (`<Leader>tt`) |
-| **mini.pairs** | Pares automáticos `()`, `[]`, `{}`, `""` | Toggleable con `<Leader>tp` |
-| **nvim-ts-autotag** | Cierre automático de etiquetas HTML | Solo en insert mode para `.html`, `.php`, `.blade` |
-| **nvim-ufo** | Folding con treesitter + indent | Vista plegada con icono y conteo de líneas; auto-open folds al entrar |
-| **lualine.nvim** | Barra de estado minimalista | Configuración por defecto con devicons |
-| **bufferline.nvim** | Pestañas de buffers con iconos | Offset para NvimTree |
-| **nvim-tree.lua** | Explorador de archivos lateral | Muestra archivos ignorados por git (`git.ignore = false`) |
-| **aerial.nvim** | Navegador de símbolos | Backends: treesitter + LSP, ancho mínimo 40 |
-| **Comment.nvim** | Comentar/descomentar líneas y bloques | Atajos `gc` (visual), `<Leader>cc` (línea), `<Leader>cb` (bloque) |
-| **copilot.vim** | GitHub Copilot | `<Tab>` liberado (`copilot_no_tab_map`) para no chocar con blink.cmp; aceptar con `<C-j>` |
-| **leap.nvim** | Navegación rápida tipo "jump anywhere" | Atajos `<Leader>s` / `<Leader>S` |
-| **vim-easy-align** | Alinear código verticalmente | Atajo `ga` en normal y visual |
-| **vim-be-good** | Minijuegos para practicar Vim | — |
-| **mini.surround** | Añadir, borrar, cambiar rodeadores (`'`, `"`, `(`, `[`, `{`) + surroundings custom Blade/Laravel | Carga inmediata |
-| **vim-slint** | Soporte para Slint UI | — |
-| **nvim-treesitter** | Parsers sintácticos + highlight + indent | 13 parsers: php, html, css, js, ts, rust, python, astro, lua, vim, etc. |
-| **nvim-treesitter-textobjects** | Navegación por funciones/clases vía `[[`, `]]`, `[M`, `]M` | — |
-| **telescope.nvim** | Buscador fuzzy | Ignora node_modules, .git, dist, build |
-| **nvim-lspconfig** | Configuración LSP nativa | Mason + blink.cmp + 8 servidores |
-| **blink.cmp** | Autocompletado | Menú con Tab/Shift-Tab, fuentes: LSP + snippets + buffer |
+Al guardar un archivo PHP, si no tiene `namespace`, se calcula a partir de `composer.json`:
 
-### Servidores LSP instalados (via Mason)
+```
+1. ¿Es filetype php?                    → No → return
+2. ¿Tiene nombre de archivo?            → No → return
+3. ¿Ya tiene namespace?                 → Sí → return
+4. Buscar composer.json hacia arriba    → No → return
+5. Leer autoload.psr-4                  → No → return
+6. Calcular el namespace                → No → return
+7. Insertar después de <?php o declare  → fin
+```
 
-| Servidor | Lenguaje | Configuración |
-|----------|----------|---------------|
-| `intelephense` | PHP | Usa `blink.cmp` para autocompletado |
-| `pyright` | Python | Usa `blink.cmp` para autocompletado |
-| `rust_analyzer` | Rust | Usa `blink.cmp` para autocompletado |
-| `lua_ls` | Lua | Usa `blink.cmp` para autocompletado |
-| `tailwindcss` | CSS/Tailwind | Autocompletado de clases, colores inline, linting |
-| `astro` | Astro | Soporte nativo para componentes `.astro` |
-| `emmet_ls` | HTML/Blade | Expansión de abreviaturas Emmet |
-| `html` | HTML | Validación, hover, autocompletado de etiquetas |
+Características:
 
-### Blink.cmp — Autocompletado
+- Soporta valores PSR-4 como string **o array**:
+  ```json
+  {
+    "autoload": {
+      "psr-4": {
+        "App\\": ["app/", "src/"],
+        "Lib\\": "lib/"
+      }
+    }
+  }
+  ```
+- Usa el prefijo de directorio **más específico** (la coincidencia más larga).
+- Comprueba límites de directorio, no solo prefijos de texto.
+- Cachea la raíz del proyecto y los mappings, invalidando por `mtime` de `composer.json`.
+- Solo inspecciona las primeras 300 líneas del buffer.
+- Si el archivo no tiene `<?php` y ya contiene texto, no lo modifica.
+- Inserta después de `declare(strict_types=1);` cuando existe.
 
-- **Preset**: `"enter"` — Enter confirma selección
-- **Tab/Shift-Tab**: navegar entre opciones
-- **Fuentes**: `lsp` (servidores), `snippets` (LuaSnip), `buffer` (contenido del archivo)
-
-### Copilot y Tab — por qué no chocan
-
-`copilot.vim` mapea `<Tab>` por defecto para aceptar sugerencias. Como `blink.cmp` también aplica su propio `<Tab>` (buffer-local) al entrar en insert mode, el mapeo de Copilot quedaba pisado. La solución aplicada:
-
-1. `vim.g.copilot_no_tab_map = true` en el `init` de `copilot.vim` → Copilot no toca `<Tab>`.
-2. `<C-j>` en insert mode acepta la sugerencia de Copilot (`copilot#Accept()`), con salto de línea como fallback si no hay sugerencia.
-
-Resultado: `<Tab>` navega el menú de blink, `<Enter>` acepta el completado y `<C-j>` acepta la sugerencia de Copilot. Sin mapeos condicionales ni "super-tab".
-
-### Formateo
-
-El formateo se delega directamente al LSP al guardar (`vim.lsp.buf.format` en `BufWritePre`). Cada servidor LSP maneja su propio formateo:
-- **intelephense** → PHP/Blade
-- **rust_analyzer** → Rust
-- **lua_ls** → Lua
-- **pyright** → Python
+Ejemplo: `app/Models/User.php` con `"App\\": "app/"` → `namespace App\Models;`.
 
 ---
 
-## Atajos de teclado (tabla completa)
+## Plugins
+
+### `lua/plugins/ui.lua`
+
+| Plugin | Propósito | Carga |
+|---|---|---|
+| `tokyonight.nvim` | Tema | Inmediata, prioridad 1000 |
+| `noice.nvim` | UI de cmdline, mensajes y notificaciones | `VeryLazy` |
+| `todo-comments.nvim` | Resalta TODO/FIXME/HACK y búsqueda | `VeryLazy` |
+| `lualine.nvim` | Barra de estado | Inmediata |
+| `bufferline.nvim` | Buffers tipo pestañas | Inmediata |
+| `nvim-tree.lua` | Explorador lateral | Comandos / tecla |
+| `aerial.nvim` | Navegador de símbolos | `VeryLazy` / tecla |
+
+### `lua/plugins/editor.lua`
+
+| Plugin | Propósito | Carga |
+|---|---|---|
+| `mini.pairs` | Pares automáticos | Inmediata |
+| `nvim-ts-autotag` | Cierre/renombrado de etiquetas | Por filetype |
+| `nvim-ufo` | Folds con Treesitter | `VeryLazy` |
+| `Comment.nvim` | Comentarios | Teclas `gc` / `gbc` |
+| `copilot.vim` | GitHub Copilot | `InsertEnter` |
+| `vim-easy-align` | Alineación | Inmediata |
+| `leap.nvim` | Salto rápido | Inmediata |
+| `vim-be-good` | Minijuegos | Comando `:VimBeGood` |
+| `vim-slint` | Soporte Slint | Filetype `slint` |
+| `telescope.nvim` | Buscador fuzzy | Comando / teclas |
+
+### `lua/plugins/lsp.lua`
+
+| Plugin | Propósito |
+|---|---|
+| `mason.nvim` | Gestor de servidores y herramientas |
+| `mason-lspconfig.nvim` | Integración Mason ↔ nvim-lspconfig |
+| `nvim-lspconfig` | Configuraciones LSP |
+| `blink.cmp` | Autocompletado |
+
+Mason y LSP se cargan al abrir el primer archivo (`BufReadPre`/`BufNewFile`), no al arrancar Neovim. Los comandos `:Mason*` siguen disponibles porque están declarados como comandos de carga diferida.
+
+### `lua/plugins/treesitter.lua`
+
+- `nvim-treesitter` (rama `main`, sin lazy-loading).
+- Instala solo los parsers que falten: `c`, `lua`, `vim`, `vimdoc`, `query`, `php`, `html`, `css`, `javascript`, `typescript`, `rust`, `python`, `astro`, `go`, `markdown`, `markdown_inline`, `blade`.
+- Highlight e indent nativos vía `vim.treesitter.start()` en `FileType`.
+- `nvim-treesitter-textobjects` para navegar funciones y clases; se carga al usar sus atajos.
+
+### Servidores LSP instalados por Mason
+
+| Servidor | Lenguaje |
+|---|---|
+| `intelephense` | PHP |
+| `pyright` | Python |
+| `rust_analyzer` | Rust |
+| `lua_ls` | Lua |
+| `tailwindcss` | Tailwind CSS |
+| `astro` | Astro |
+| `emmet_ls` | HTML / Blade |
+| `html` | HTML |
+| `gopls` | Go |
+
+Las capacidades de completado se configuran una sola vez:
+
+```lua
+vim.lsp.config("*", {
+  capabilities = require("blink.cmp").get_lsp_capabilities(),
+})
+```
+
+Los atajos LSP son buffer-local y se crean en `LspAttach`, así que solo existen donde hay un cliente activo.
+
+### blink.cmp y Copilot
+
+- **Fuentes**: LSP, snippets y buffer.
+- **Snippets**: `vim.snippet` (preset `default`). No se usa LuaSnip.
+- **Tab / Shift-Tab**: navegar opciones.
+- **Enter**: aceptar opción.
+- **Ctrl-J**: aceptar sugerencia de Copilot.
+- Copilot no mapea Tab (`vim.g.copilot_no_tab_map = true`), por lo que no compite con blink.cmp.
+
+---
+
+## Rendimiento
+
+Mediciones con `nvim --headless --startuptime`:
+
+| Escenario | Arranque |
+|---|---|
+| Configuración anterior (plugins eager) | ~700 ms |
+| Configuración actual, primera ejecución | ~300 ms |
+| Configuración actual, ejecuciones en caliente | ~190–290 ms |
+
+Cambios principales:
+
+- **Lazy-loading**: Telescope, nvim-tree, Copilot, Mason/LSP, blink, `nvim-be-good`, Slint y textobjects se cargan solo cuando se necesitan.
+- **LuaSnip eliminado**: blink usa `vim.snippet`; se ahorran ~38 ms y una dependencia.
+- **Folds sin autocmd costoso**: se eliminó `openAllFolds()` en cada `BufEnter`/`FileType`; ahora se usa `foldlevelstart = 99`.
+- **Formateo filtrado**: no se llama a `vim.lsp.buf.format` si no hay cliente con soporte de formato.
+- **PHP namespace con caché**: no se lee `composer.json` ni se recorre el buffer completo en cada guardado.
+- **lazy.nvim**: caché de módulos y plugins de runtime desactivados.
+
+Para perfilar tu propio arranque:
+
+```bash
+nvim --startuptime /tmp/startup.log +qa
+```
+
+Dentro de Neovim: `:Lazy profile`.
+
+---
+
+## Atajos de teclado
 
 ### General
 
 | Atajo | Acción |
-|-------|--------|
-| `<Leader>w` | Guardar archivo |
+|---|---|
+| `<Leader>w` | Guardar |
 | `<Leader>wa` | Guardar todos |
 | `<Leader>wq` | Guardar y salir |
 | `<Leader>qq` | Salir |
 | `<Leader>q!` | Forzar salida |
-| `<C-s>` | Guardar (normal/insert) |
-| `<Leader>e` | Abrir NvimTree |
-| `<Leader>nt` | Toggle NvimTree |
-| `<Leader>tp` | Toggle auto-pairs |
-| `<C-j>` (insert) | Aceptar sugerencia de Copilot (o salto de línea si no hay) |
+| `<C-s>` (normal/insert) | Guardar sin salir de insert |
+| `<Leader>tp` | Activar/desactivar mini.pairs |
+| `<Leader>e` | Toggle NvimTree |
+| `<C-j>` (insert) | Aceptar sugerencia Copilot |
 
-### Autocompletado (blink.cmp)
-
-| Atajo | Acción |
-|-------|--------|
-| `<Tab>` (insert) | Siguiente opción del menú |
-| `<S-Tab>` (insert) | Opción anterior del menú |
-| `<Enter>` (insert) | Aceptar opción seleccionada |
-| `<C-j>` (insert) | Aceptar sugerencia de Copilot |
-
-### Navegación (Telescope)
+### Telescope
 
 | Atajo | Acción |
-|-------|--------|
+|---|---|
 | `<Leader>ff` | Buscar archivos |
-| `<Leader>fg` | Buscar contenido (grep) |
+| `<Leader>fg` | Buscar contenido |
 | `<Leader>fb` | Buscar buffers |
 | `<Leader>fh` | Buscar ayuda |
+| `<Leader>tt` | Buscar TODOs |
 
 ### Buffers y pestañas
 
 | Atajo | Acción |
-|-------|--------|
-| `<A-n>` | Pestaña siguiente |
-| `<A-p>` | Pestaña anterior |
-| `<C-n>` | Buffer siguiente |
-| `<C-p>` | Buffer anterior |
-| `<Leader>bn` | Buffer siguiente |
-| `<Leader>bp` | Buffer anterior |
+|---|---|
+| `<A-n>` / `<A-p>` | Pestaña siguiente / anterior |
+| `<C-n>` / `<C-p>` | Buffer siguiente / anterior |
+| `<Leader>bn` / `<Leader>bp` | Buffer siguiente / anterior |
 | `<Leader>wd` | Cerrar buffer |
-| `<Leader><PageUp>` | Buffer anterior |
-| `<Leader><PageDown>` | Buffer siguiente |
+| `<Leader><PageUp>` / `<Leader><PageDown>` | Buffer anterior / siguiente |
 
-### LSP
+### LSP (solo en buffers con cliente)
 
 | Atajo | Acción |
-|-------|--------|
+|---|---|
 | `gd` | Ir a definición |
 | `gr` | Ver referencias |
 | `gi` | Ir a implementación |
 | `gy` | Ir a definición de tipo |
-| `K` | Mostrar documentación (hover) |
+| `K` | Documentación (hover) |
 | `<Leader>rn` | Renombrar símbolo |
-| `<Leader>ca` | Code action / Importar clase |
-| `[d` | Error diagnóstico anterior |
-| `]d` | Error diagnóstico siguiente |
-| `<Leader>d` | Ver detalle del error (float) |
-| `<Leader>dl` | Lista de todos los errores |
+| `<Leader>ca` | Code action / importar clase (normal y visual) |
 
-### Navegación por funciones/clases (treesitter-textobjects)
+### Diagnósticos
 
 | Atajo | Acción |
-|-------|--------|
-| `[[` | Ir al inicio de la función anterior |
-| `]]` | Ir al inicio de la función siguiente |
-| `[M` | Ir al inicio de la clase anterior |
-| `]M` | Ir al inicio de la clase siguiente |
+|---|---|
+| `[d` / `]d` | Error anterior / siguiente |
+| `<Leader>d` | Ver detalle del error |
+| `<Leader>dl` | Lista de errores |
 
-### Folding (Ufo)
+### Funciones y clases (Treesitter textobjects)
 
 | Atajo | Acción |
-|-------|--------|
-| `zR` | Abrir todos los folds |
-| `zM` | Cerrar todos los folds |
+|---|---|
+| `]m` / `[m` | Inicio de función siguiente / anterior |
+| `]M` / `[M` | Fin de función siguiente / anterior |
+| `]c` / `[c` | Inicio de clase siguiente / anterior |
+| `]C` / `[C` | Fin de clase siguiente / anterior |
+
+Funcionan en modos normal, visual y operator-pending.
+
+### Folds (ufo)
+
+| Atajo | Acción |
+|---|---|
+| `zR` | Abrir todos |
+| `zM` | Cerrar todos |
 | `zr` | Abrir folds excepto funciones |
 | `zm` | Cerrar folds |
-| `zj` | Fold siguiente |
-| `zk` | Fold anterior |
+| `zj` / `zk` | Fold siguiente / anterior |
 
 ### Comentarios
 
 | Atajo | Acción |
-|-------|--------|
+|---|---|
+| `gc` | Comentar (normal/visual) |
+| `gbc` | Comentario de bloque |
 | `<Leader>cc` | Comentar línea |
 | `<Leader>cb` | Comentar bloque |
-| `<Leader>c` (visual) | Comentar selección |
-
-### Todo Comments
-
-| Atajo | Acción |
-|-------|--------|
-| `<Leader>tt` | Buscar TODOs (Telescope) |
-| `]t` | TODO siguiente |
-| `[t` | TODO anterior |
-
-### Surround custom (Blade/Laravel)
-
-| Atajo | Acción |
-|-------|--------|
-| `saiw` | Envuelve palabra con `@island ... @endisland` |
-| `sapw` | Envuelve palabra con `@php ... @endphp` |
-| `safw` | Envuelve palabra con `@if ... @endif` |
-| `saew` | Envuelve palabra con `@foreach ... @endforeach` |
-| `sasw` | Envuelve palabra con `@section ... @endsection` |
-| `sahw` | Envuelve palabra con `@push ... @endpush` |
-| `sadw` | Envuelve palabra con `@error ... @enderror` |
-| `saaw` | Envuelve palabra con `@auth ... @endauth` |
-| `sagw` | Envuelve palabra con `@guest ... @endguest` |
-| `saww` | Envuelve palabra con `@env ... @endenv` |
-| `S{tecla}` (visual) | Envuelve selección con el surround correspondiente |
 
 ### Otros
 
 | Atajo | Acción |
-|-------|--------|
+|---|---|
 | `<Leader>ao` | Toggle Aerial (símbolos) |
-| `ga` | EasyAlign (alinear código) |
-| `gc` | Comentar (modo visual) |
+| `<Leader>s` / `<Leader>S` | Leap forward / backward |
+| `ga` | EasyAlign (normal/visual) |
+| `]t` / `[t` | TODO siguiente / anterior |
+
+---
+
+## Surrounds custom de Blade/Laravel
+
+Con `mini.surround`, después de `sa` puedes usar estas claves:
+
+| Secuencia | Resultado |
+|---|---|
+| `saiw` | `@island ... @endisland` |
+| `sapw` | `@php ... @endphp` |
+| `safw` | `@if ... @endif` |
+| `saew` | `@foreach ... @endforeach` |
+| `sasw` | `@section ... @endsection` |
+| `sahw` | `@push ... @endpush` |
+| `sadw` | `@error ... @enderror` |
+| `saaw` | `@auth ... @endauth` |
+| `sagw` | `@guest ... @endguest` |
+| `saww` | `@env ... @endenv` |
+
+En modo visual, `S` añade el surround seleccionado.
 
 ---
 
 ## Solución de problemas
 
 ```vim
-:checkhealth     " Diagnóstico completo
-:Lazy            " Estado de los plugins
-:Mason           " Gestor de LSP servers
-:Noice           " Historial de notificaciones (noice)
+:checkhealth        " Diagnóstico general
+:checkhealth lsp    " Estado de los servidores LSP
+:Lazy               " Estado de plugins
+:Mason              " Servidores y herramientas
+:TSInstall          " Instalar parsers de Treesitter
+:TSUpdate           " Actualizar parsers
 ```
 
-Si hay errores de plugins:
-1. Ejecuta `:Lazy` y revisa pestañas de errores
-2. `:Lazy update` para actualizar todos los plugins
-3. `:Lazy clean` para limpiar plugins no usados
-
-Si el LSP no funciona:
-1. `:Mason` y verifica que los servidores estén instalados
-2. `:LspInfo` para ver qué servidores están activos
-3. Verifica que `composer.json` tenga `autoload.psr-4` para PHP
+- **No aparece el autocompletado**: abre un archivo real (el LSP se carga en `BufReadPre`) y comprueba con `:checkhealth lsp`.
+- **No se formatea al guardar**: el servidor debe soportar `textDocument/formatting`. `intelephense` gratuito no lo hace. Comprueba también `vim.b.disable_autoformat`.
+- **No se inserta el namespace**: verifica que exista `composer.json` con `autoload.psr-4`, que el archivo sea `filetype=php` y que no tenga ya un `namespace`.
+- **Blade sin resaltado**: instala el parser con `:TSInstall blade`.
+- **Errores tras actualizar plugins**: `:Lazy sync` y luego `:TSUpdate`.
 
 ---
 

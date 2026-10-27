@@ -1,73 +1,128 @@
 local M = {}
 
-function M.find_project_root()
-  local path = vim.fn.expand('%:p:h')
-  local found = vim.fs.find('composer.json', { upward = true, path = path })[1]
-  if found then
-    return vim.fn.fnamemodify(found, ':h')
+-- Solo se inspeccionan las primeras líneas: el namespace de PHP vive al inicio.
+local MAX_SCAN_LINES = 300
+
+local root_cache = {}
+local mappings_cache = {}
+
+function M.clear_cache()
+  root_cache = {}
+  mappings_cache = {}
+end
+
+local function get_buf(buf)
+  if buf == nil or buf == 0 then
+    return vim.api.nvim_get_current_buf()
   end
-  return nil
+  return buf
+end
+
+function M.get_head_lines(buf)
+  buf = get_buf(buf)
+  local count = vim.api.nvim_buf_line_count(buf)
+  return vim.api.nvim_buf_get_lines(buf, 0, math.min(count, MAX_SCAN_LINES), false)
+end
+
+function M.find_project_root(buf)
+  buf = get_buf(buf)
+  local filepath = vim.api.nvim_buf_get_name(buf)
+  if filepath == "" then
+    return nil
+  end
+
+  local dir = vim.fn.fnamemodify(filepath, ":h")
+  if root_cache[dir] ~= nil then
+    return root_cache[dir] or nil
+  end
+
+  local root = vim.fs.root(dir, "composer.json")
+  root_cache[dir] = root or false
+  return root
 end
 
 function M.get_psr4_mappings(root)
-  local composer_file = root .. '/composer.json'
-  local file = io.open(composer_file, 'r')
+  local composer_file = root .. "/composer.json"
+  local stat = vim.uv.fs_stat(composer_file)
+  local cached = mappings_cache[root]
+  local mtime = stat and (stat.mtime.sec .. ":" .. stat.mtime.nsec) or 0
+
+  if cached and stat and cached.mtime == mtime then
+    return cached.data
+  end
+
+  local file = io.open(composer_file, "r")
   if not file then
+    mappings_cache[root] = { mtime = 0, data = nil }
     return nil
   end
-  local content = file:read('*all')
+
+  local content = file:read("*all")
   file:close()
 
   local ok, data = pcall(vim.json.decode, content)
-  if not ok then
-    return nil
-  end
+  local mappings = ok and data and data.autoload and data.autoload["psr-4"] or nil
 
-  local autoload = data.autoload
-  if not autoload or not autoload['psr-4'] then
-    return nil
-  end
+  mappings_cache[root] = {
+    mtime = mtime,
+    data = mappings,
+  }
 
-  return autoload['psr-4']
+  return mappings
 end
 
 function M.compute_namespace(filepath, project_root, mappings)
-  local rel_path = filepath:sub(#project_root + 2)
-  rel_path = rel_path:gsub('\\', '/')
+  local rel_path = filepath:sub(#project_root + 2):gsub("\\", "/")
+
+  local best_prefix, best_dir_len = nil, -1
 
   for ns_prefix, dir_prefix in pairs(mappings) do
-    local dir = dir_prefix:gsub('\\', '/'):gsub('/+$', '')
-    local escaped_dir = dir:gsub('([%.%+%-%*%?%[%]%(%)%%])', '\\%1')
+    -- Composer permite tanto un string como un array de directorios.
+    local dirs = type(dir_prefix) == "table" and dir_prefix or { dir_prefix }
 
-    if rel_path:find('^' .. escaped_dir) then
-      local subpath = rel_path:sub(#dir + 1):gsub('^/', '')
+    for _, dir in ipairs(dirs) do
+      dir = tostring(dir):gsub("\\", "/"):gsub("/+$", "")
 
-      local dir_part = vim.fn.fnamemodify(subpath, ':h'):gsub('^%.$', '')
-      local ns_suffix = dir_part:gsub('/', '\\')
-      if ns_suffix ~= '' then
-        ns_suffix = '\\' .. ns_suffix
+      local matches = dir == ""
+        or rel_path == dir
+        or rel_path:sub(1, #dir + 1) == dir .. "/"
+
+      if matches and #dir > best_dir_len then
+        best_prefix, best_dir_len = ns_prefix, #dir
       end
-
-      return ns_prefix:gsub('\\$', '') .. ns_suffix
     end
   end
 
-  return nil
+  if not best_prefix or best_prefix == "" then
+    return nil
+  end
+
+  local subpath = rel_path:sub(best_dir_len + 1):gsub("^/", "")
+  local dir_part = vim.fn.fnamemodify(subpath, ":h"):gsub("^%.$", "")
+  local ns_suffix = dir_part:gsub("/", "\\")
+
+  if ns_suffix ~= "" then
+    ns_suffix = "\\" .. ns_suffix
+  end
+
+  return (best_prefix:gsub("\\$", "")) .. ns_suffix
 end
 
-function M.has_namespace()
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+function M.has_namespace(lines)
+  lines = lines or M.get_head_lines(0)
+
   for _, line in ipairs(lines) do
-    if line:find('^%s*namespace%s+') then
+    if line:find("^%s*namespace%s+") then
       return true
     end
   end
+
   return false
 end
 
 function M.get_php_tag_index(lines)
   for i, line in ipairs(lines) do
-    if line:find('<?php') then
+    if line:find("<?php") then
       return i
     end
   end
@@ -77,8 +132,8 @@ end
 function M.get_declare_index(lines, after)
   for i = after, #lines do
     local trimmed = vim.trim(lines[i])
-    if trimmed ~= '' then
-      if trimmed:find('^declare%s*%(') then
+    if trimmed ~= "" then
+      if trimmed:find("^declare%s*%(") then
         return i
       end
       return nil
@@ -87,45 +142,62 @@ function M.get_declare_index(lines, after)
   return nil
 end
 
-function M.insert_namespace(namespace)
-  local ns_line = 'namespace ' .. namespace .. ';'
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+function M.insert_namespace(buf, namespace, lines)
+  buf = get_buf(buf)
+  lines = lines or M.get_head_lines(buf)
 
+  local ns_line = "namespace " .. namespace .. ";"
   local php_idx = M.get_php_tag_index(lines)
 
-  if php_idx then
-    local insert_after = php_idx
-    local declare_idx = M.get_declare_index(lines, php_idx + 1)
-    if declare_idx then
-      insert_after = declare_idx
+  if not php_idx then
+    local only_blank = true
+    for _, line in ipairs(lines) do
+      if vim.trim(line) ~= "" then
+        only_blank = false
+        break
+      end
     end
-    local ns_added = {}
-    table.insert(ns_added, '')
-    table.insert(ns_added, ns_line)
-    if insert_after + 1 > #lines or vim.trim(lines[insert_after + 1] or '') ~= '' then
-      table.insert(ns_added, '')
+
+    if not only_blank then
+      return
     end
-    vim.api.nvim_buf_set_lines(0, insert_after, insert_after, false, ns_added)
-  else
-    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '<?php', '', ns_line, '' })
+
+    vim.api.nvim_buf_set_lines(buf, 0, 0, false, { "<?php", "", ns_line, "" })
+    return
   end
+
+  local insert_after = php_idx
+  local declare_idx = M.get_declare_index(lines, php_idx + 1)
+  if declare_idx then
+    insert_after = declare_idx
+  end
+
+  local ns_added = { "", ns_line }
+  if insert_after + 1 > #lines or vim.trim(lines[insert_after + 1] or "") ~= "" then
+    table.insert(ns_added, "")
+  end
+
+  vim.api.nvim_buf_set_lines(buf, insert_after, insert_after, false, ns_added)
 end
 
-function M.auto_namespace()
-  if vim.bo.filetype ~= 'php' then
+function M.auto_namespace(buf)
+  buf = get_buf(buf)
+
+  if vim.bo[buf].filetype ~= "php" then
     return
   end
 
-  if M.has_namespace() then
+  local filepath = vim.api.nvim_buf_get_name(buf)
+  if filepath == "" then
     return
   end
 
-  local filepath = vim.fn.expand('%:p')
-  if filepath == '' then
+  local lines = M.get_head_lines(buf)
+  if M.has_namespace(lines) then
     return
   end
 
-  local root = M.find_project_root()
+  local root = M.find_project_root(buf)
   if not root then
     return
   end
@@ -140,7 +212,7 @@ function M.auto_namespace()
     return
   end
 
-  M.insert_namespace(namespace)
+  M.insert_namespace(buf, namespace, lines)
 end
 
 return M
